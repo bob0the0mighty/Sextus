@@ -6,7 +6,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import android.app.Activity;
@@ -23,8 +28,8 @@ public class Main extends Activity {
 	private static final	String	JSONLoc					= "http://tetonsoftware.com/bikes/bikes.json";
 	private static final	String	ERR_TITLE				= "Error";
 	private 							String	errString;
-	private 							String	bikesJSON;
-	private 		          View		listView;
+	private 							List<Bike>	bikes;
+	private 		          View		mainView;
 	private 							AlertDialog.Builder	errAlert;
 	
 	@Override
@@ -32,13 +37,14 @@ public class Main extends Activity {
 		super.onCreate( savedInstanceState );
 		setContentView( R.layout.activity_main );
 		
-		errAlert = new AlertDialog.Builder( this );
+		errAlert 	= new AlertDialog.Builder( this );
     errAlert.setTitle( ERR_TITLE );
+    
 		
-		listView = findViewById( R.id.listView );
+    //listView	= findViewById( R.id.listView );
+		bikes			= new ArrayList< Bike >();
 		
 		new AsyncJSONGetter().execute( JSONLoc );
-		
 		
 		
 	}
@@ -92,10 +98,21 @@ private class AsyncJSONGetter extends AsyncTask<String, Void, String> {
 		}
 
 		protected void onPostExecute(String result) {
-			JSONTokener jToken = null;
 			
-			bikesJSON = result;
-			jToken = new JSONTokener( bikesJSON );
+			try {
+				JSONObject object 	= (JSONObject) new JSONTokener( result ).nextValue();
+				JSONArray bikeArray = (JSONArray) object.get("Bikes");
+				for(int counter = 0; counter < bikeArray.length(); counter++) {
+					Bike bike = new Bike( (JSONObject) bikeArray.get( counter ) );
+					bikes.add( bike );
+				}
+			}
+			catch ( JSONException e ) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
 			
 			if(!errString.isEmpty()) {
 				errAlert.setMessage( errString );
